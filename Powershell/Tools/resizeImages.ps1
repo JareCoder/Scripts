@@ -6,6 +6,22 @@
     This script asks for a source folder and a maximum size (format WIDTHxHEIGHT), resizes all images in the source folder so they fit within those bounds without stretching, and saves them to a new folder named <sourcefolder>_<WIDTHxHEIGHT>.
 #>
 
+# CMD progress bar
+function Show-TextProgressBar {
+    param(
+        [int]$Current,
+        [int]$Total,
+        [int]$Width = 40
+    )
+
+    # Calculate percent and how many blocks to draw
+    $percent = ($Current / $Total) * 100
+    $blocks  = [int]([math]::Round($Width * $Current / $Total))
+    $bar     = '█' * $blocks + ' ' * ($Width - $blocks)
+
+    [Console]::Write(("[{0}] {1,3:N0}%`r" -f $bar, $percent))
+}
+
 # Ask for source folder
 do {
     $SourceFolder = Read-Host "Enter the path to the folder containing images to resize"
@@ -51,6 +67,7 @@ if ($totalFiles -eq 0) {
 
 $successfulFiles = 0
 $skippedFiles = 0
+$failedFilePaths = @()
 
 # Load System.Drawing for resizing
 Add-Type -AssemblyName System.Drawing
@@ -61,11 +78,13 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
     $file = $allFiles[$i]
 
     # Progress bar
-    $percent = [math]::Round(($i + 1) / $totalFiles * 100, 2)
     Write-Progress `
-      -Activity "Resizing images " `
-      -Status "$($i+1) of $totalFiles : $($srcFile.Name)" `
-      -PercentComplete $percent
+        -Activity "Resizing images " `
+        -Status "$($i+1) of $totalFiles : $($file.Name)" `
+        -PercentComplete (($i + 1) / $totalFiles * 100)
+    
+    # Show-TextProgressBar -Current ($i + 1) -Total $totalFiles
+    
 
     # Build destination path
     $relPath = $file.DirectoryName.Substring($SourceFolder.Length).TrimStart('\')
@@ -103,7 +122,7 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
         Start-Sleep 3
     }
     catch {
-        Write-Warning "Failed to process $($file.FullName)"
+        $failedFilePaths += $file.FullName
     }
     finally {
         # Clean up
@@ -113,10 +132,18 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
     }
 }
 
+[Console]::WriteLine()
 Write-Host "Resizing completed!"
 if ($skippedFiles -gt 0) {
     Write-Host "$skippedFiles files were skipped because they already exist in the destination folder."
 }
+Write-Host
 Write-Host "$successfulFiles / $totalFiles images resized and saved to $destFolder."
+if ($failedFilePaths.Count -gt 0) {
+    Write-Host "Failed to process the following files:"
+    foreach ($filePath in $failedFilePaths) {
+        Write-Host " - $filePath"
+    }
+}
 Write-Host "Press Enter to exit" -NoNewline
 Read-Host
