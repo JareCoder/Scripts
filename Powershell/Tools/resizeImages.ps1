@@ -49,7 +49,8 @@ if ($totalFiles -eq 0) {
     return
 }
 
-$succesfulFiles = 0
+$successfulFiles = 0
+$skippedFiles = 0
 
 # Load System.Drawing for resizing
 Add-Type -AssemblyName System.Drawing
@@ -74,7 +75,7 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
 
     # Check if file already exists in destination
     if (Test-Path $destPath) {
-        Write-Host "File $($destPath) already exists. Skipping."
+        $skippedFiles++
         continue
     }
 
@@ -98,10 +99,10 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
         $graphics.DrawImage($img, 0, 0, $newWidth, $newHeight)
 
         $resized.Save($destPath, $img.RawFormat)
-        $succesfulFiles++
+        $successfulFiles++
     }
     catch {
-        Write-Warning "Failed to process $($file.FullName): $_"
+        Write-Warning "Failed to process $($file.FullName)"
     }
     finally {
         # Clean up
@@ -111,4 +112,8 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
     }
 }
 
-Write-Host "Resizing completed. $succesfulFiles of $totalFiles images resized and saved to $destFolder."
+Write-Host "Resizing completed!"
+if ($skippedFiles -gt 0) {
+    Write-Host "$skippedFiles files were skipped because they already exist in the destination folder."
+}
+Write-Host "$successfulFiles of $totalFiles images resized and saved to $destFolder."
