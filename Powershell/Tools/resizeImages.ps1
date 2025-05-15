@@ -17,7 +17,7 @@ do {
 # Ask for maximum size
 $sizePattern = '^[0-9]+x[0-9]+$'
 do {
-    $MaxSize = Read-Host "Enter the maximum size for the images (WIDTHxHEIGHT, e.g., 800x600)"
+    $MaxSize = Read-Host "Enter the maximum size for the images (WIDTHxHEIGHT, e.g. 800x600)"
     if ($MaxSize -notmatch $sizePattern) {
         Write-Host "Invalid format. Please enter in WIDTHxHEIGHT format."
     }
@@ -100,6 +100,7 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
 
         $resized.Save($destPath, $img.RawFormat)
         $successfulFiles++
+        Start-Sleep 3
     }
     catch {
         Write-Warning "Failed to process $($file.FullName)"
@@ -116,4 +117,6 @@ Write-Host "Resizing completed!"
 if ($skippedFiles -gt 0) {
     Write-Host "$skippedFiles files were skipped because they already exist in the destination folder."
 }
-Write-Host "$successfulFiles of $totalFiles images resized and saved to $destFolder."
+Write-Host "$successfulFiles / $totalFiles images resized and saved to $destFolder."
+Write-Host "Press Enter to exit" -NoNewline
+Read-Host
