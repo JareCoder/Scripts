@@ -119,7 +119,6 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
 
         $resized.Save($destPath, $img.RawFormat)
         $successfulFiles++
-        Start-Sleep 3
     }
     catch {
         $failedFilePaths += $file.FullName
