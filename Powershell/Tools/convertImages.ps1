@@ -90,9 +90,12 @@ for ($i = 0; $i -lt $totalFiles; $i++) {
         -Status "$($i+1) of $totalFiles : $($file.Name)" `
         -PercentComplete (($i + 1) / $totalFiles * 100)
 
-    # Prepare output file path
-    $outputFileName = [System.IO.Path]::ChangeExtension($file.FullName, $outFormat)
-    $outputFilePath = Join-Path -Path $destFolder -ChildPath (Split-Path -Leaf $outputFileName)
+    # Build destination path
+    $relPath = $file.DirectoryName.Substring($SourceFolder.Length).TrimStart('\')
+    $subFolder = Join-Path $destFolder $relPath
+    if (-not (Test-Path $subFolder)) { New-Item -ItemType Directory -Path $subFolder | Out-Null }
+    $outputFileName = [System.IO.Path]::ChangeExtension($file.Name, $outFormat)
+    $outputFilePath  = Join-Path $subFolder $outputFileName
 
     # Check if the file already exists
     if (Test-Path $outputFilePath) {
